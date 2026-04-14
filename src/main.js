@@ -85,6 +85,11 @@ class App {
 
     const { delta, elapsed } = this.sceneManager.update();
 
+    // Billboard: black hole always faces camera
+    const camQ = this.sceneManager.camera.quaternion;
+    this.blackHole.group.quaternion.copy(camQ);
+    this.accretionDisk.group.quaternion.copy(camQ);
+
     this.blackHole.update(elapsed);
     this.accretionDisk.update(delta, elapsed);
     this.wordManager.update(delta);
