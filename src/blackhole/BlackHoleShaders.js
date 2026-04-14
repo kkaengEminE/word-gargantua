@@ -90,6 +90,17 @@ export const accretionDiskVertex = `
   }
 `;
 
+export const accretionDiskVertexVertical = `
+  varying vec2 vUv;
+  varying float vRadius;
+
+  void main() {
+    vUv = uv;
+    vRadius = length(position.xy);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
 export const accretionDiskFragment = `
   uniform float uTime;
   uniform float uInnerRadius;
