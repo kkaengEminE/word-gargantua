@@ -105,6 +105,24 @@ export class AccretionDisk {
     this.group.add(this.particles);
   }
 
+  rebuildDisk() {
+    if (this.diskMesh) {
+      this.group.remove(this.diskMesh);
+      this.diskMesh.geometry.dispose();
+      this.diskMesh.material.dispose();
+    }
+    this._createDiskMesh();
+  }
+
+  rebuildParticles() {
+    if (this.particles) {
+      this.group.remove(this.particles);
+      this.particles.geometry.dispose();
+      this.particles.material.dispose();
+    }
+    this._createParticles();
+  }
+
   update(delta, elapsed) {
     this.diskUniforms.uTime.value = elapsed;
 

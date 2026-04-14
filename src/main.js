@@ -8,6 +8,8 @@ import { InputController } from './interaction/InputController.js';
 import { SelectionManager } from './interaction/SelectionManager.js';
 import { ConnectionManager } from './connection/ConnectionManager.js';
 import { ConnectionLines } from './connection/ConnectionLines.js';
+import { StarField } from './scene/StarField.js';
+import { AdminPanel } from './ui/AdminPanel.js';
 
 class App {
   constructor() {
@@ -46,6 +48,17 @@ class App {
       this.connectionManager,
       this.dataStore
     );
+
+    this.starField = new StarField();
+    this.starField.init(this.sceneManager.scene);
+
+    this.adminPanel = new AdminPanel({
+      sceneManager: this.sceneManager,
+      blackHole: this.blackHole,
+      accretionDisk: this.accretionDisk,
+      starField: this.starField,
+      wordManager: this.wordManager,
+    });
 
     this._hideOnboardingOnFirstInput();
     this._animate();

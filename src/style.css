@@ -227,3 +227,136 @@ html, body {
   background: rgba(255, 184, 77, 0.3);
   border-radius: 2px;
 }
+
+/* Admin Panel */
+#admin-toggle {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 30;
+  background: rgba(10, 5, 20, 0.8);
+  border: 1px solid rgba(255, 184, 77, 0.25);
+  border-radius: 6px;
+  color: rgba(255, 184, 77, 0.7);
+  font-family: 'Inter', sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 6px 12px;
+  cursor: pointer;
+  backdrop-filter: blur(8px);
+  transition: all 0.2s;
+}
+
+#admin-toggle:hover {
+  color: #FFB84D;
+  border-color: rgba(255, 184, 77, 0.5);
+  background: rgba(10, 5, 20, 0.9);
+}
+
+#admin-toggle.active {
+  color: #FFB84D;
+  border-color: rgba(255, 184, 77, 0.5);
+}
+
+#admin-panel {
+  position: fixed;
+  bottom: 48px;
+  left: 16px;
+  z-index: 30;
+  width: 280px;
+  max-height: 70vh;
+  overflow-y: auto;
+  background: rgba(10, 5, 20, 0.92);
+  border: 1px solid rgba(255, 184, 77, 0.2);
+  border-radius: 10px;
+  backdrop-filter: blur(16px);
+  padding: 12px;
+  transition: opacity 0.25s, transform 0.25s;
+}
+
+#admin-panel.hidden {
+  display: none;
+}
+
+.admin-section {
+  margin-bottom: 12px;
+}
+
+.admin-section-title {
+  font-size: 10px;
+  font-weight: 600;
+  color: rgba(255, 184, 77, 0.6);
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: 8px;
+  padding-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 184, 77, 0.1);
+}
+
+.admin-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.admin-label {
+  font-size: 11px;
+  color: rgba(255, 200, 150, 0.7);
+  min-width: 90px;
+  flex-shrink: 0;
+}
+
+.admin-slider {
+  flex: 1;
+  -webkit-appearance: none;
+  appearance: none;
+  height: 3px;
+  background: rgba(255, 184, 77, 0.15);
+  border-radius: 2px;
+  outline: none;
+  cursor: pointer;
+}
+
+.admin-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #FFB84D;
+  cursor: pointer;
+}
+
+.admin-slider::-moz-range-thumb {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: #FFB84D;
+  border: none;
+  cursor: pointer;
+}
+
+.admin-value {
+  font-size: 10px;
+  color: rgba(255, 184, 77, 0.8);
+  min-width: 36px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Admin panel scrollbar */
+#admin-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+#admin-panel::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+#admin-panel::-webkit-scrollbar-thumb {
+  background: rgba(255, 184, 77, 0.2);
+  border-radius: 2px;
+}

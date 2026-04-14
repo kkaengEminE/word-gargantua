@@ -45,4 +45,10 @@ export const BLOOM = {
   threshold: 0.4,
 };
 
+export const STARS = {
+  count: 3000,
+  size: 2.0,
+  sphereRadius: 80,
+};
+
 export const STORAGE_KEY = 'word-gargantua-data';

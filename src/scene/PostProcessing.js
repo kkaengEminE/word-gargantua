@@ -49,8 +49,8 @@ export class PostProcessing {
     );
     this.composer.addPass(this.bloomPass);
 
-    const vignettePass = new ShaderPass(VignetteShader);
-    this.composer.addPass(vignettePass);
+    this.vignettePass = new ShaderPass(VignetteShader);
+    this.composer.addPass(this.vignettePass);
 
     const outputPass = new OutputPass();
     this.composer.addPass(outputPass);
