@@ -173,7 +173,7 @@ html, body {
 /* Word Labels (CSS2D) */
 .word-label {
   font-family: 'Inter', sans-serif;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 400;
   color: rgba(255, 200, 150, 0.9);
   text-shadow: 0 0 8px rgba(255, 150, 50, 0.4);

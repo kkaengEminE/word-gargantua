@@ -15,27 +15,27 @@ export const BLACK_HOLE = {
   photonRingRadius: 2.1,
   diskInnerRadius: 4.0,
   diskOuterRadius: 6.9,
-  glowRadius: 6.5,
-  particleCount: 1500,
+  glowRadius: 10.0,
+  particleCount: 2000,
 };
 
 export const ORBIT = {
-  minRadius: 3.5,
-  maxRadius: 5.0,
-  baseSpeed: 0.17,
+  minRadius: 6.0,
+  maxRadius: 9.5,
+  baseSpeed: 0.12,
   maxInclination: 0.15,
   maxYOffset: 0.3,
   spawnRadius: 1.8,
 };
 
 export const CAMERA = {
-  fov: 45,
+  fov: 47,
   near: 0.1,
   far: 200,
   initialPosition: [0, 5, 12],
-  minDistance: 7.5,
-  maxDistance: 25,
-  autoRotateSpeed: 2.0,
+  minDistance: 7.0,
+  maxDistance: 22,
+  autoRotateSpeed: 1.0,
   dampingFactor: 0.08,
 };
 
@@ -46,9 +46,9 @@ export const BLOOM = {
 };
 
 export const STARS = {
-  count: 3000,
-  size: 2.0,
-  sphereRadius: 100,
+  count: 5500,
+  size: 3.9,
+  sphereRadius: 70,
 };
 
 export const STORAGE_KEY = 'word-gargantua-data';

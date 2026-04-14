@@ -171,7 +171,7 @@ export class AdminPanel {
         },
       }),
       this._createSliderRow('Word Font', {
-        min: 8, max: 32, step: 1, value: 14,
+        min: 8, max: 32, step: 1, value: 13,
         onChange: (v) => {
           document.querySelectorAll('.word-label').forEach(el => {
             el.style.fontSize = `${v}px`;
