@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { STORAGE_KEY, ORBIT } from '../utils/constants.js';
+import { ORBIT } from '../utils/constants.js';
 
 export class SupabaseStore {
   constructor() {
@@ -7,31 +7,17 @@ export class SupabaseStore {
     const key = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
     this._supabase = (url && key) ? createClient(url, key) : null;
-    this._cache = new Map(); // id -> word entry
-    this._localStorageKey = STORAGE_KEY;
+    this._cache = new Map();
   }
 
   async init() {
     if (this._supabase) {
       try {
         await this._loadFromSupabase();
-
-        // If Supabase is empty but localStorage has data, migrate
-        if (this._cache.size === 0) {
-          this._loadFromLocalStorage();
-          if (this._cache.size > 0) {
-            console.log('Migrating localStorage data to Supabase...');
-            await this._migrateToSupabase();
-          }
-        }
-
-        this._saveToLocalStorage();
-        return;
       } catch (err) {
-        console.warn('Supabase load failed, falling back to localStorage:', err);
+        console.warn('Supabase load failed:', err);
       }
     }
-    this._loadFromLocalStorage();
   }
 
   // --- Synchronous read methods (from cache) ---
@@ -66,7 +52,6 @@ export class SupabaseStore {
       });
       this._syncWordToSupabase(existing);
       connections.forEach(cid => this._syncConnectionToSupabase(existing.id, cid));
-      this._saveToLocalStorage();
       return { entry: existing, isNew: false };
     }
 
@@ -91,7 +76,6 @@ export class SupabaseStore {
     this._cache.set(entry.id, entry);
     this._syncWordToSupabase(entry);
     connections.forEach(cid => this._syncConnectionToSupabase(entry.id, cid));
-    this._saveToLocalStorage();
     return { entry, isNew: true };
   }
 
@@ -106,7 +90,6 @@ export class SupabaseStore {
       wordB.connections.push(wordIdA);
     }
     this._syncConnectionToSupabase(wordIdA, wordIdB);
-    this._saveToLocalStorage();
   }
 
   updateWordOrbit(id, orbitData) {
@@ -114,7 +97,6 @@ export class SupabaseStore {
     if (word) {
       Object.assign(word.orbit, orbitData);
       this._syncWordToSupabase(word);
-      this._saveToLocalStorage();
     }
   }
 
@@ -203,69 +185,5 @@ export class SupabaseStore {
       };
       this._cache.set(entry.id, entry);
     }
-  }
-
-  // --- Private: localStorage fallback ---
-
-  _loadFromLocalStorage() {
-    const raw = localStorage.getItem(this._localStorageKey);
-    if (!raw) return;
-    try {
-      const data = JSON.parse(raw);
-      this._cache.clear();
-      for (const w of (data.words || [])) {
-        this._cache.set(w.id, w);
-      }
-    } catch { /* ignore parse errors */ }
-  }
-
-  _saveToLocalStorage() {
-    const data = { version: 1, words: this.getAllWords() };
-    localStorage.setItem(this._localStorageKey, JSON.stringify(data));
-  }
-
-  // --- Private: One-time migration ---
-
-  async _migrateToSupabase() {
-    const words = this.getAllWords();
-
-    const wordRows = words.map(w => ({
-      id: w.id,
-      text: w.text,
-      first_created: w.firstCreated,
-      last_entered: w.lastEntered,
-      count: w.count,
-      orbit_radius: w.orbit.radius,
-      orbit_angle: w.orbit.angle,
-      orbit_speed: w.orbit.speed,
-      orbit_inclination: w.orbit.inclination,
-      orbit_y_offset: w.orbit.yOffset,
-    }));
-
-    const { error: wErr } = await this._supabase.from('words').upsert(wordRows);
-    if (wErr) console.error('Migration words error:', wErr);
-
-    // Collect unique connection pairs
-    const connSet = new Set();
-    for (const word of words) {
-      for (const connId of word.connections) {
-        const [a, b] = word.id < connId ? [word.id, connId] : [connId, word.id];
-        connSet.add(`${a}|${b}`);
-      }
-    }
-
-    const connRows = Array.from(connSet).map(key => {
-      const [word_a_id, word_b_id] = key.split('|');
-      return { word_a_id, word_b_id };
-    });
-
-    if (connRows.length > 0) {
-      const { error: cErr } = await this._supabase
-        .from('connections')
-        .upsert(connRows, { onConflict: 'word_a_id,word_b_id' });
-      if (cErr) console.error('Migration connections error:', cErr);
-    }
-
-    console.log(`Migrated ${words.length} words, ${connRows.length} connections to Supabase`);
   }
 }
