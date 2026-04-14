@@ -5,6 +5,7 @@ export class InputController {
     this.wordManager = wordManager;
     this.connectionManager = connectionManager;
     this.dataStore = dataStore;
+    this._isComposing = false;
 
     this.input = document.getElementById('word-input');
     this.tagAutocomplete = new TagAutocomplete(this.input, wordManager);
@@ -13,8 +14,17 @@ export class InputController {
   }
 
   _bindEvents() {
+    this.input.addEventListener('compositionstart', () => {
+      this._isComposing = true;
+    });
+
+    this.input.addEventListener('compositionend', () => {
+      this._isComposing = false;
+    });
+
     this.input.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
+        if (e.isComposing || this._isComposing) return;
         e.preventDefault();
         if (this.tagAutocomplete.isOpen && this.tagAutocomplete.hasSelection()) {
           this.tagAutocomplete.confirmSelection();
@@ -32,6 +42,7 @@ export class InputController {
     });
 
     this.input.addEventListener('input', () => {
+      if (this._isComposing) return;
       this.tagAutocomplete.onInput();
     });
 
@@ -84,6 +95,12 @@ export class InputController {
     // Create bidirectional connections
     for (const connId of connectionIds) {
       this.connectionManager.addConnection(entry.id, connId);
+    }
+
+    // Refresh cached entries so both sides show the connection
+    this.wordManager.refreshEntry(entry.id);
+    for (const connId of connectionIds) {
+      this.wordManager.refreshEntry(connId);
     }
 
     this.input.value = '';

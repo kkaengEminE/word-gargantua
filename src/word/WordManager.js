@@ -64,6 +64,13 @@ export class WordManager {
     return this.getAllWordObjects().map(w => w.entry.text);
   }
 
+  refreshEntry(id) {
+    const wordObj = this.words.get(id);
+    if (!wordObj) return;
+    const freshEntry = this.dataStore.getWordById(id);
+    if (freshEntry) wordObj.entry = freshEntry;
+  }
+
   dispose() {
     for (const wordObj of this.words.values()) {
       wordObj.dispose();

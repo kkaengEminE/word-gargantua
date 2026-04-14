@@ -36,12 +36,12 @@ export const eventHorizonFragment = `
 
   void main() {
     float fresnel = pow(1.0 - abs(dot(vViewDir, vNormal)), 2.0);
-    float shimmer = noise(vUv * 8.0 + uTime * 0.3) * 0.03;
+    float shimmer = noise(vUv * 8.0 + uTime * 0.3) * 0.01;
 
-    vec3 baseColor = vec3(0.005, 0.003, 0.01);
-    vec3 edgeColor = vec3(0.15, 0.06, 0.02);
+    vec3 baseColor = vec3(0.0, 0.0, 0.0);
+    vec3 edgeColor = vec3(0.05, 0.02, 0.005);
 
-    vec3 color = mix(baseColor, edgeColor, fresnel * 0.5 + shimmer);
+    vec3 color = mix(baseColor, edgeColor, fresnel * 0.2 + shimmer);
     float alpha = 1.0;
 
     gl_FragColor = vec4(color, alpha);
