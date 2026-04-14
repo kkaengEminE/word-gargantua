@@ -10,7 +10,7 @@ const VignetteShader = {
   uniforms: {
     tDiffuse: { value: null },
     offset: { value: 1.0 },
-    darkness: { value: 1.2 },
+    darkness: { value: 0.4 },
   },
   vertexShader: `
     varying vec2 vUv;

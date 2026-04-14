@@ -225,7 +225,7 @@ export class AdminPanel {
         onChange: (v) => { pp.bloomPass.threshold = v; },
       }),
       this._createSliderRow('Vignette', {
-        min: 0, max: 3, step: 0.1, value: 1.2,
+        min: 0, max: 3, step: 0.1, value: 0.4,
         onChange: (v) => { pp.vignettePass.uniforms.darkness.value = v; },
       }),
     ]);
