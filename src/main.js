@@ -2,7 +2,7 @@ import './style.css';
 import { SceneManager } from './scene/SceneManager.js';
 import { BlackHole } from './blackhole/BlackHole.js';
 import { AccretionDisk } from './blackhole/AccretionDisk.js';
-import { DataStore } from './data/DataStore.js';
+import { SupabaseStore } from './data/SupabaseStore.js';
 import { WordManager } from './word/WordManager.js';
 import { InputController } from './interaction/InputController.js';
 import { SelectionManager } from './interaction/SelectionManager.js';
@@ -12,11 +12,11 @@ import { StarField } from './scene/StarField.js';
 import { AdminPanel } from './ui/AdminPanel.js';
 
 class App {
-  constructor() {
+  constructor(dataStore) {
     const canvas = document.getElementById('webgl');
     this.sceneManager = new SceneManager(canvas);
 
-    this.dataStore = new DataStore();
+    this.dataStore = dataStore;
 
     this.blackHole = new BlackHole();
     this.blackHole.init(this.sceneManager.scene);
@@ -95,4 +95,10 @@ class App {
   }
 }
 
-new App();
+async function main() {
+  const dataStore = new SupabaseStore();
+  await dataStore.init();
+  new App(dataStore);
+}
+
+main();
