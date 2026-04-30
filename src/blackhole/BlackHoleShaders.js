@@ -90,17 +90,6 @@ export const accretionDiskVertex = `
   }
 `;
 
-export const accretionDiskVertexVertical = `
-  varying vec2 vUv;
-  varying float vRadius;
-
-  void main() {
-    vUv = uv;
-    vRadius = length(position.xy);
-    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
-  }
-`;
-
 export const accretionDiskFragment = `
   uniform float uTime;
   uniform float uInnerRadius;
@@ -161,6 +150,79 @@ export const accretionDiskFragment = `
     float innerFade = smoothstep(0.0, 0.15, radialNorm);
     float outerFade = 1.0 - smoothstep(0.85, 1.0, radialNorm);
     float alpha = innerFade * outerFade * (0.6 + turbulence * 0.3);
+
+    gl_FragColor = vec4(color, alpha);
+  }
+`;
+
+export const lensingArcVertex = `
+  varying vec2 vUv;
+  varying float vRadius;
+
+  void main() {
+    vUv = uv;
+    vRadius = length(position.xy);
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+export const lensingArcFragment = `
+  uniform float uTime;
+  uniform float uInnerRadius;
+  uniform float uOuterRadius;
+  uniform float uLensAlpha;
+  varying vec2 vUv;
+  varying float vRadius;
+
+  float hash(vec2 p) {
+    return fract(sin(dot(p, vec2(127.1, 311.7))) * 43758.5453);
+  }
+
+  float noise(vec2 p) {
+    vec2 i = floor(p);
+    vec2 f = fract(p);
+    f = f * f * (3.0 - 2.0 * f);
+    float a = hash(i);
+    float b = hash(i + vec2(1.0, 0.0));
+    float c = hash(i + vec2(0.0, 1.0));
+    float d = hash(i + vec2(1.0, 1.0));
+    return mix(mix(a, b, f.x), mix(c, d, f.x), f.y);
+  }
+
+  float fbm(vec2 p) {
+    float val = 0.0;
+    float amp = 0.5;
+    for (int i = 0; i < 4; i++) {
+      val += amp * noise(p);
+      p *= 2.0;
+      amp *= 0.5;
+    }
+    return val;
+  }
+
+  void main() {
+    float radialNorm = (vRadius - uInnerRadius) / (uOuterRadius - uInnerRadius);
+    radialNorm = clamp(radialNorm, 0.0, 1.0);
+
+    float angle = atan(vUv.y - 0.5, vUv.x - 0.5);
+    float turbulence = fbm(vec2(angle * 3.0 + uTime * 0.15, radialNorm * 6.0 + uTime * 0.05));
+
+    vec3 innerColor = vec3(1.0, 0.85, 0.6);
+    vec3 midColor = vec3(1.0, 0.5, 0.15);
+    vec3 outerColor = vec3(0.8, 0.15, 0.02);
+
+    vec3 color;
+    if (radialNorm < 0.4) {
+      color = mix(innerColor, midColor, radialNorm / 0.4);
+    } else {
+      color = mix(midColor, outerColor, (radialNorm - 0.4) / 0.6);
+    }
+
+    color *= 0.7 + turbulence * 0.6;
+
+    float innerFade = smoothstep(0.0, 0.15, radialNorm);
+    float outerFade = 1.0 - smoothstep(0.85, 1.0, radialNorm);
+    float alpha = innerFade * outerFade * (0.6 + turbulence * 0.3) * uLensAlpha;
 
     gl_FragColor = vec4(color, alpha);
   }

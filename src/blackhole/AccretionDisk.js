@@ -2,11 +2,22 @@ import * as THREE from 'three';
 import { BLACK_HOLE, COLORS } from '../utils/constants.js';
 import {
   accretionDiskVertex,
-  accretionDiskVertexVertical,
   accretionDiskFragment,
+  lensingArcVertex,
+  lensingArcFragment,
   diskParticleVertex,
   diskParticleFragment,
 } from './BlackHoleShaders.js';
+
+const LENSING_INNER = 2.6;
+const LENSING_OUTER = 4.0;
+const LENSING_FADE_START = 0.15;
+const LENSING_FADE_END = 0.55;
+
+function smoothstep(edge0, edge1, x) {
+  const t = Math.max(0, Math.min(1, (x - edge0) / (edge1 - edge0)));
+  return t * t * (3 - 2 * t);
+}
 
 export class AccretionDisk {
   constructor() {
@@ -16,16 +27,37 @@ export class AccretionDisk {
       uInnerRadius: { value: BLACK_HOLE.diskInnerRadius },
       uOuterRadius: { value: BLACK_HOLE.diskOuterRadius },
     };
+    this.lensingUniforms = {
+      uTime: { value: 0 },
+      uInnerRadius: { value: LENSING_INNER },
+      uOuterRadius: { value: LENSING_OUTER },
+      uLensAlpha: { value: 0 },
+    };
     this.particleData = null;
-    this.verticalParticleData = null;
   }
 
   init(scene) {
     this._createDiskMesh();
-    this._createVerticalDiskMesh();
+    this._createLensingArc();
     this._createParticles();
-    this._createVerticalParticles();
     scene.add(this.group);
+  }
+
+  _createLensingArc() {
+    const geometry = new THREE.RingGeometry(LENSING_INNER, LENSING_OUTER, 128, 4);
+
+    const material = new THREE.ShaderMaterial({
+      uniforms: this.lensingUniforms,
+      vertexShader: lensingArcVertex,
+      fragmentShader: lensingArcFragment,
+      transparent: true,
+      blending: THREE.AdditiveBlending,
+      side: THREE.DoubleSide,
+      depthWrite: false,
+    });
+
+    this.lensingArc = new THREE.Mesh(geometry, material);
+    this.group.add(this.lensingArc);
   }
 
   _createDiskMesh() {
@@ -49,30 +81,6 @@ export class AccretionDisk {
 
     this.diskMesh = new THREE.Mesh(geometry, material);
     this.group.add(this.diskMesh);
-  }
-
-  _createVerticalDiskMesh() {
-    const geometry = new THREE.RingGeometry(
-      BLACK_HOLE.diskInnerRadius,
-      BLACK_HOLE.diskOuterRadius,
-      128,
-      4
-    );
-    // No rotation — stays in XY plane (vertical)
-
-    const material = new THREE.ShaderMaterial({
-      uniforms: this.diskUniforms,
-      vertexShader: accretionDiskVertexVertical,
-      fragmentShader: accretionDiskFragment,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      side: THREE.DoubleSide,
-      depthWrite: false,
-      opacity: 0.7,
-    });
-
-    this.verticalDiskMesh = new THREE.Mesh(geometry, material);
-    this.group.add(this.verticalDiskMesh);
   }
 
   _createParticles() {
@@ -130,62 +138,6 @@ export class AccretionDisk {
     this.group.add(this.particles);
   }
 
-  _createVerticalParticles() {
-    const count = Math.floor(BLACK_HOLE.particleCount * 0.5);
-    const positions = new Float32Array(count * 3);
-    const sizes = new Float32Array(count);
-    const alphas = new Float32Array(count);
-
-    this.verticalParticleData = {
-      angles: new Float32Array(count),
-      radii: new Float32Array(count),
-      speeds: new Float32Array(count),
-      zOffsets: new Float32Array(count),
-    };
-
-    const innerR = BLACK_HOLE.diskInnerRadius;
-    const outerR = BLACK_HOLE.diskOuterRadius;
-
-    for (let i = 0; i < count; i++) {
-      const radius = innerR + Math.random() * (outerR - innerR);
-      const angle = Math.random() * Math.PI * 2;
-      const zOffset = (Math.random() - 0.5) * 0.3;
-
-      this.verticalParticleData.angles[i] = angle;
-      this.verticalParticleData.radii[i] = radius;
-      this.verticalParticleData.speeds[i] = (0.3 / radius) * (0.8 + Math.random() * 0.4);
-      this.verticalParticleData.zOffsets[i] = zOffset;
-
-      // XY plane orbit
-      positions[i * 3] = Math.cos(angle) * radius;
-      positions[i * 3 + 1] = Math.sin(angle) * radius;
-      positions[i * 3 + 2] = zOffset;
-
-      const radialNorm = (radius - innerR) / (outerR - innerR);
-      sizes[i] = 1.0 + radialNorm * 2.0 + Math.random() * 1.5;
-      alphas[i] = (1.0 - radialNorm * 0.6) * (0.2 + Math.random() * 0.5);
-    }
-
-    const geometry = new THREE.BufferGeometry();
-    geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-    geometry.setAttribute('aSize', new THREE.BufferAttribute(sizes, 1));
-    geometry.setAttribute('aAlpha', new THREE.BufferAttribute(alphas, 1));
-
-    const material = new THREE.ShaderMaterial({
-      uniforms: {
-        uColor: { value: new THREE.Color(0xFFAA55) },
-      },
-      vertexShader: diskParticleVertex,
-      fragmentShader: diskParticleFragment,
-      transparent: true,
-      blending: THREE.AdditiveBlending,
-      depthWrite: false,
-    });
-
-    this.verticalParticles = new THREE.Points(geometry, material);
-    this.group.add(this.verticalParticles);
-  }
-
   rebuildDisk() {
     if (this.diskMesh) {
       this.group.remove(this.diskMesh);
@@ -193,12 +145,6 @@ export class AccretionDisk {
       this.diskMesh.material.dispose();
     }
     this._createDiskMesh();
-    if (this.verticalDiskMesh) {
-      this.group.remove(this.verticalDiskMesh);
-      this.verticalDiskMesh.geometry.dispose();
-      this.verticalDiskMesh.material.dispose();
-    }
-    this._createVerticalDiskMesh();
   }
 
   rebuildParticles() {
@@ -208,16 +154,18 @@ export class AccretionDisk {
       this.particles.material.dispose();
     }
     this._createParticles();
-    if (this.verticalParticles) {
-      this.group.remove(this.verticalParticles);
-      this.verticalParticles.geometry.dispose();
-      this.verticalParticles.material.dispose();
-    }
-    this._createVerticalParticles();
   }
 
-  update(delta, elapsed) {
+  update(delta, elapsed, camera) {
     this.diskUniforms.uTime.value = elapsed;
+    this.lensingUniforms.uTime.value = elapsed;
+
+    if (camera && this.lensingArc) {
+      this.lensingArc.rotation.y = Math.atan2(camera.position.x, camera.position.z);
+      const r = camera.position.length();
+      const elev = r > 0 ? Math.abs(camera.position.y) / r : 0;
+      this.lensingUniforms.uLensAlpha.value = 1.0 - smoothstep(LENSING_FADE_START, LENSING_FADE_END, elev);
+    }
 
     // Horizontal particles
     if (this.particleData) {
@@ -234,23 +182,6 @@ export class AccretionDisk {
         positions[i * 3 + 2] = Math.sin(angle) * radius;
       }
       this.particles.geometry.attributes.position.needsUpdate = true;
-    }
-
-    // Vertical particles (XY plane orbit)
-    if (this.verticalParticleData) {
-      const vPos = this.verticalParticles.geometry.attributes.position.array;
-      const vCount = this.verticalParticleData.angles.length;
-
-      for (let i = 0; i < vCount; i++) {
-        this.verticalParticleData.angles[i] += this.verticalParticleData.speeds[i] * delta;
-        const angle = this.verticalParticleData.angles[i];
-        const radius = this.verticalParticleData.radii[i];
-
-        vPos[i * 3] = Math.cos(angle) * radius;
-        vPos[i * 3 + 1] = Math.sin(angle) * radius;
-        vPos[i * 3 + 2] = this.verticalParticleData.zOffsets[i];
-      }
-      this.verticalParticles.geometry.attributes.position.needsUpdate = true;
     }
   }
 
